@@ -1,26 +1,34 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 const Manager = () => {
-    const Ref = useRef();
-    const [form, setform] = useState({ site: "", username: "", password: "" });
+    const [form, setForm] = useState({ site: "", username: "", password: "" });
+    const [passwordArray, setPasswordArray] = useState([]);
+    const [showPassword, setShowPassword] = useState(false); // New state to manage password visibility
+    const passwordRef = useRef(); // Ref for the password input
 
-    const showpassword = () => {
-        if (Ref.current.src.includes("/icons/show.png")) {
-            Ref.current.src = "/icons/hidden.png";
-        } else {
-            Ref.current.src = "/icons/show.png";
+    useEffect(() => {
+        let passwords = localStorage.getItem("passwords");
+        if (passwords) {
+            setPasswordArray(JSON.parse(passwords));
         }
+    }, []);
+
+    const togglePasswordVisibility = () => {
+        setShowPassword(!showPassword);
     };
 
-    const handlechange = (e) => {
-        setform({
+    const handleChange = (e) => {
+        setForm({
             ...form,
-            [e.target.name]: e.target.value
+            [e.target.name]: e.target.value,
         });
     };
 
-    const savepassword = () => {
-        console.log("Saving password:", form);
+    const savePassword = () => {
+        const updatedPasswordArray = [...passwordArray, form];
+        setPasswordArray(updatedPasswordArray);
+        localStorage.setItem("passwords", JSON.stringify(updatedPasswordArray));
+        console.log("Saving password:", passwordArray);
     };
 
     return (
@@ -35,41 +43,53 @@ const Manager = () => {
                 <p className="text-center font-bold">TIP: Set an alphanumeric password</p>
 
                 <div className="text-black flex flex-col space-y-4 items-center">
-                    <input 
-                        value={form.site} 
-                        type="text" 
-                        name="site" 
-                        onChange={handlechange} 
-                        placeholder="   Enter URL" 
-                        className="full rounded-full border w-full" 
-                        style={{ textIndent: "1rem" }} // Adjust text indent
+                    <input
+                        value={form.site}
+                        type="text"
+                        name="site"
+                        onChange={handleChange}
+                        placeholder="   Enter URL"
+                        className="full rounded-full border w-full"
+                        style={{ textIndent: "1rem" }}
                     />
                     <div className="flex space-x-2 w-full">
-                        <input 
-                            value={form.username} 
-                            type="text" 
-                            name="username" 
-                            onChange={handlechange} 
-                            placeholder="   Username" 
-                            className="full rounded-full border w-full" 
-                            style={{ textIndent: "1rem" }} // Adjust text indent
+                        <input
+                            value={form.username}
+                            type="text"
+                            name="username"
+                            onChange={handleChange}
+                            placeholder="   Username"
+                            className="full rounded-full border w-full"
+                            style={{ textIndent: "1rem" }}
                         />
-                        <div className="relative">
+                        <div className="relative w-full">
                             <input
                                 value={form.password}
-                                onChange={handlechange}
-                                type="password"
+                                onChange={handleChange}
+                                ref={passwordRef}
+                                type={showPassword ? "text" : "password"} // Toggles between "password" and "text"
                                 placeholder="   Password"
                                 name="password"
-                                className="full rounded-full border w-full pr-10" 
-                                style={{ textIndent: "1rem" }} // Adjust text indent
+                                className="full rounded-full border w-full pr-10"
+                                style={{ textIndent: "1rem" }}
                             />
-                            <span className="absolute right-2 top-1/2 transform -translate-y-1/2 cursor-pointer" onClick={showpassword}>
-                                <img ref={Ref} className="p-1" width={26} src="/icons/show.png" alt="view password" />
+                            <span
+                                className="absolute right-2 top-1/2 transform -translate-y-1/2 cursor-pointer"
+                                onClick={togglePasswordVisibility}
+                            >
+                                <img
+                                    className="p-1"
+                                    width={26}
+                                    src={showPassword ? "/icons/hidden.png" : "/icons/show.png"}
+                                    alt={showPassword ? "Hide password" : "Show password"}
+                                />
                             </span>
                         </div>
                     </div>
-                    <button className="flex justify-center items-center bg-green-600 rounded-full border w-1/4 hover:bg-green-400" onClick={savepassword}>
+                    <button
+                        className="flex justify-center items-center bg-green-600 rounded-full border w-1/4 hover:bg-green-400"
+                        onClick={savePassword}
+                    >
                         <lord-icon
                             src="https://cdn.lordicon.com/jgnvfzqg.json"
                             trigger="hover"
@@ -78,6 +98,32 @@ const Manager = () => {
                         </lord-icon>
                         Add Password
                     </button>
+                </div>
+
+                <div className="passwords">
+                    <h1 className="py-5">YOUR PASSWORDS</h1>
+                    {passwordArray.length === 0 ? (
+                        <h2 className="text-center">No passwords saved</h2>
+                    ) : (
+                        <table className="table-auto bg-purple-800 w-full text-center">
+                            <thead>
+                                <tr className="text-white">
+                                    <th>URL</th>
+                                    <th>Username</th>
+                                    <th>Password</th>
+                                </tr>
+                            </thead>
+                            <tbody className="bg-purple-200">
+                                {passwordArray.map((item, index) => (
+                                    <tr key={index}>
+                                        <td className="border-2 border-white p-2">{item.site}</td>
+                                        <td className="border-2 border-white p-2">{item.username}</td>
+                                        <td className="border-2 border-white p-2">{item.password}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
                 </div>
             </div>
         </div>
