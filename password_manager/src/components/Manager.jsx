@@ -1,12 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ToastContainer, toast, Bounce } from 'react-toastify'; // Import Bounce from react-toastify
+import { ToastContainer, toast, Bounce } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { v4 as uuidv4 } from 'uuid';
 
 const Manager = () => {
     const [form, setForm] = useState({ site: "", username: "", password: "" });
     const [passwordArray, setPasswordArray] = useState([]);
-    const [showPassword, setShowPassword] = useState(false); // New state to manage password visibility
-    const passwordRef = useRef(); // Ref for the password input
+    const [showPassword, setShowPassword] = useState(false);
+    const passwordRef = useRef();
 
     useEffect(() => {
         let passwords = localStorage.getItem("passwords");
@@ -39,6 +40,8 @@ const Manager = () => {
         setShowPassword(!showPassword);
     };
 
+
+
     const handleChange = (e) => {
         setForm({
             ...form,
@@ -47,10 +50,45 @@ const Manager = () => {
     };
 
     const savePassword = () => {
-        const updatedPasswordArray = [...passwordArray, form];
-        setPasswordArray(updatedPasswordArray);
-        localStorage.setItem("passwords", JSON.stringify(updatedPasswordArray));
-        console.log("Saving password:", passwordArray);
+        if (form.site && form.username && form.password) {
+            const updatedPasswordArray = [...passwordArray, { ...form, id: uuidv4() }];
+            setPasswordArray(updatedPasswordArray);
+            localStorage.setItem("passwords", JSON.stringify(updatedPasswordArray));
+            console.log("Saving password:", updatedPasswordArray);
+            setForm({ site: "", username: "", password: "" });
+        } else {
+            toast.error('Please fill in all fields', {
+                position: "top-right",
+                autoClose: 3000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "light",
+                transition: Bounce,
+            });
+        }
+    };
+
+    const deletePassword = (id) => {
+        const updatedPasswords = passwordArray.filter(item => item.id !== id);
+        setPasswordArray(updatedPasswords);
+        localStorage.setItem("passwords", JSON.stringify(updatedPasswords));
+    };
+
+    const editPassword = (id) => {
+        const passwordToEdit = passwordArray.find(item => item.id === id);
+        if (passwordToEdit) {
+            setForm({
+                site: passwordToEdit.site,
+                username: passwordToEdit.username,
+                password: passwordToEdit.password,
+            });
+            const updatedPasswords = passwordArray.filter(item => item.id !== id);
+            setPasswordArray(updatedPasswords);
+        }
+
     };
 
     return (
@@ -66,7 +104,7 @@ const Manager = () => {
                 draggable
                 pauseOnHover
                 theme="light"
-                transition={Bounce} // Correctly passing Bounce transition
+                transition={Bounce}
             />
             <div className="absolute top-16 z-[-2] h-screen w-screen bg-white bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,119,198,0.3),rgba(255,255,255,0))]">
                 <div className="mx-auto bg-purple-50 p-4 mycontainer w-3/4">
@@ -103,7 +141,7 @@ const Manager = () => {
                                     value={form.password}
                                     onChange={handleChange}
                                     ref={passwordRef}
-                                    type={showPassword ? "text" : "password"} // Toggles between "password" and "text"
+                                    type={showPassword ? "text" : "password"}
                                     placeholder="   Password"
                                     name="password"
                                     className="full rounded-full border w-full pr-10"
@@ -147,6 +185,7 @@ const Manager = () => {
                                         <th>URL</th>
                                         <th>Username</th>
                                         <th>Password</th>
+                                        <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="bg-purple-200">
@@ -191,6 +230,29 @@ const Manager = () => {
                                                     </div>
                                                 </div>
                                             </td>
+                                            <td className=" flex justify-center items-center border-2 border-white p-2" >
+                                                <div className="flex justify-center items-center">
+                                                    <div className="px-3" onClick={() => deletePassword(item.id)}>
+                                                        <lord-icon
+                                                            src="https://cdn.lordicon.com/skkahier.json"
+                                                            trigger="hover"
+                                                            style={{ width: '25px', height: '25px' }}
+                                                        >
+                                                        </lord-icon>
+                                                    </div>
+                                                </div>
+                                                <div className="flex justify-center items-center">
+                                                    <div className="px-3" onClick={() => editPassword(item.id)}>
+                                                        <lord-icon
+                                                            src="https://cdn.lordicon.com/gwlusjdu.json"
+                                                            trigger="hover"
+                                                            style={{ width: '25px', height: '25px' }}
+                                                        >
+                                                        </lord-icon>
+                                                    </div>
+                                                </div>
+                                            </td>
+
                                         </tr>
                                     ))}
                                 </tbody>
